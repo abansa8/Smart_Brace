@@ -24,10 +24,19 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import {
+  ActionButton,
+  Avatar,
+  ListItem,
+  Toolbar,
+  BottomNavigation,
+  Icon,
+} from 'react-native-material-ui';
+
 const App: () => React$Node = () => {
   return (
     <>
-      <StatusBar barStyle="dark-content" />
+      {/* <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
@@ -67,7 +76,12 @@ const App: () => React$Node = () => {
             <LearnMoreLinks />
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </SafeAreaView> */
+        <Toolbar
+          key="toolbar"
+          centerElement="SMART DASH"
+        />
+      }
     </>
   );
 };
