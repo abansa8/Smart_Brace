@@ -1,0 +1,1 @@
+This folder is dedicated for accessing FireBase from the Arduino
