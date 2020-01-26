@@ -1,7 +1,5 @@
 /*
-
    Gyroscope Calculator
- 
 */
 
 #include <Arduino_LSM6DS3.h>
@@ -15,25 +13,18 @@ void setup() {
 
     while (1);
   }
-
-  Serial.print("Gyroscope sample rate = ");
-  Serial.print(IMU.gyroscopeSampleRate());
-  Serial.println(" Hz");
-  Serial.println();
-  Serial.println("Gyroscope in degrees/second");
-  Serial.println("X\tY\tZ");
 }
 
 void loop() {
-  float x, y, z;
 
-  if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(x, y, z);
+ 
+  float x, y, z, pitch;
 
-    Serial.print(x);
-    Serial.print('\t');
-    Serial.print(y);
-    Serial.print('\t');
-    Serial.println(z);
+      if (IMU.accelerationAvailable()) {
+        IMU.readAcceleration(x,y,z);
+        pitch = 180 * atan2(x, sqrt(y*y + z*z))/PI;
+        Serial.println(pitch);
+      }
   }
-}
+
+  //delay(2000);
