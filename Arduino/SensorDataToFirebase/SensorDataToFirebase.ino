@@ -14,6 +14,8 @@
 
 #define MOD_COUNTER 100
 #define WRIST_DEADBAND 50
+#define MAX_RANGE 45
+#define MIN_RANGE -45
 
 //Global Variables
 const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
@@ -22,9 +24,15 @@ int x; int y; int z;
 int Counter;
 int id;
 
+//WRIST
 int currentCycle[MOD_COUNTER];
 int maxAngle; int minAngle; int wristMotion = 0;
 
+//VIBRATIONS
+int vibPin = 2;
+int vibTrigger = 0; vibWait = 0;
+
+//FIREBASE
 String path = "/GyroReadings";
 String jsonStr;
 
@@ -56,6 +64,9 @@ void setup()
 
   Serial.begin(115200);
   delay(100);
+
+  //Vibration motor OUTPUT
+  pinMode(vibPin, OUTPUT);
 
   Serial.println();
 
@@ -163,6 +174,7 @@ void loop()
         Serial.println();
       }
 
+      //Updating WristMotion
       if(id % MOD_COUNTER == 0)
       {
         updateWristMotion(CalcAngle);
@@ -171,7 +183,9 @@ void loop()
       {
         currentCycle[id % MOD_COUNTER] = CalcAngle;
       }
-      
+  
+      //Updating vibration motor settings
+      vibrationHeartbeat();
   }
   else
   {
@@ -235,4 +249,34 @@ void updateWristMotion(int val)
         Serial.println("--------------------------------");
         Serial.println();
       }
+}
+
+void vibrationHeartbeat()
+{
+  if(vibtrigger < 3)
+  {
+    digitalWrite(vibPin, LOW);
+    if(CalcAngle < MIN_RANGE || CalcAngle > MAX_RANGE)
+    {
+      vibTrigger++;
+      vibWait = 0;
+    }
+    else
+    {
+      vibTrigger = 0;
+    }
+  }
+  else
+  {
+    digitalWrite(vibPin, HIGH);
+    if(vibWait == 3)
+    {
+      vibTrigger = 0;
+    }
+    else
+    {
+      vibWait++;
+    }
+  }
+  
 }
