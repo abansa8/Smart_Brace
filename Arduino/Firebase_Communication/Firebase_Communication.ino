@@ -5,12 +5,23 @@
 
 #include "Firebase_Arduino_WiFiNINA.h"
 #include <WiFi.h>
+#include <NTPClient.h>
+#include <WiFiUDP.h>
 #include "time.h"
 
 #define FIREBASE_HOST "esp32test-acf49.firebaseio.com"
 #define FIREBASE_AUTH "uXprbUT4LSXNBSk5N5qsnnJPxYoMBtqVZfzryfhk"
 #define WIFI_SSID "SM-G955W7932"
 #define WIFI_PASSWORD "aryamanbansal"
+
+//Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+//Variables to hold date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
 
 //Define Firebase data object
 FirebaseData firebaseData;
@@ -34,6 +45,12 @@ void setup()
   Serial.print("Connected with IP: ");
   Serial.println(WiFi.localIP());
   Serial.println();
+
+  //Init the NTPClient
+  timeClient.begin();
+  timeClient.setTimeOffset(-18000); //May have to change offset - depends on time zone
+
+  //
 
   //Provide the autntication data
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH, WIFI_SSID, WIFI_PASSWORD);
@@ -204,15 +221,10 @@ void setup()
 
 void loop()
 {
-}
 
-//void printLocalTime()
-//{
-//  struct tm timeinfo;
-//  if(!getLocalTime(&timeinfo))
-//  {
-//    Serial.println("Failed to get time")
-//    return;
-//  }
-//  Serial.println(&timeinfo, "%A, %B %d &Y %H:%M:%S");
-//}
+while (!timeClient.update()){
+  timeClient.forceUpdate();
+}
+  formattedDate = timeClient.getFormattedTime();
+  Serial.println(formattedDate);
+}
