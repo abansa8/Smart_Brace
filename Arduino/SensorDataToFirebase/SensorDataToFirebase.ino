@@ -13,7 +13,6 @@
 #include<Wire.h>
 
 #define MOD_COUNTER 100
-#define WRIST_MOTION__DEADBAND 50
 #define MAX_RANGE 45
 #define MIN_RANGE -45
 
@@ -26,8 +25,14 @@ int id;
 float CalcAngle;
 
 //WRIST
-int currentCycle[MOD_COUNTER];
-int maxAngle; int minAngle; int wristMotion = 0;
+#define WRIST_MOTION__DEADBAND 70
+#define WRIST_MOTION_TRIGGER 100
+bool streaching = false; int stageOneComplete = 0; int wristMotion = 0;
+int streachCounter = 0;
+
+//BODY
+#define BODY_MOTION_DEADBAND
+int bodyMotion = 0;
 
 //VIBRATIONS
 int vibPin = 2;
@@ -178,14 +183,7 @@ void loop()
       }
 
       //Updating WristMotion
-      if(id % MOD_COUNTER == 0)
-      {
-        updateWristMotion(CalcAngle);
-      }
-      else
-      {
-        currentCycle[id % MOD_COUNTER] = CalcAngle;
-      }
+      updateWristMotion();
   
       //Updating vibration motor settings
       vibrationHeartbeat();
@@ -198,37 +196,16 @@ void loop()
 
 }
 
-int getMax()
+void updateWristMotion()
 {
-  int toReturn = -10000;
-  for(int i = 0; i < MOD_COUNTER; i++)
+  if(CalcAngle > WRIST_MOTION_TRIGGER || CalcAngle < -WRIST_MOTION_TRIGGER)
   {
-    if(currentCycle[i] > toReturn)
-    {
-      toReturn = currentCycle[i];
-    }
+    streachCounter++;
   }
 
-  return toReturn;
-}
-
-int getMin()
-{
-  int toReturn = 10000;
-  for(int i = 0; i < MOD_COUNTER; i++)
+  if(streachCounter >= WRIST_MOTION_TRIGGER)
   {
-    if(currentCycle[i] < toReturn)
-    {
-      toReturn = currentCycle[i];
-    }
-  }
-}
-
-void updateWristMotion(int val)
-{
-  int max = getMax(); int min = getMin();
-  if(abs(max - min) >= WRIST_MOTION__DEADBAND && wristMotion != 10)
-  {
+    streachCounter = 0;
     wristMotion++;
   }
 
