@@ -23,6 +23,7 @@ int minVal=265; int maxVal=402;
 int x; int y; int z;
 int Counter;
 int id;
+float CalcAngle;
 
 //WRIST
 int currentCycle[MOD_COUNTER];
@@ -30,7 +31,9 @@ int maxAngle; int minAngle; int wristMotion = 0;
 
 //VIBRATIONS
 int vibPin = 2;
-int vibTrigger = 0; vibWait = 0;
+int vibTrigger = 0; int vibWait = 0;
+#define VIB_TRIGGER_COUNTER 3
+#define VIB_WAIT_COUNTER 3
 
 //FIREBASE
 String path = "/GyroReadings";
@@ -140,7 +143,7 @@ void loop()
   pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
 
   //Calculated Angle Difference
-  float CalcAngle = y - pitch;
+  CalcAngle = y - pitch;
 
   if(Counter > MOD_COUNTER)
   {
@@ -253,7 +256,7 @@ void updateWristMotion(int val)
 
 void vibrationHeartbeat()
 {
-  if(vibtrigger < 3)
+  if(vibTrigger < VIB_TRIGGER_COUNTER)
   {
     digitalWrite(vibPin, LOW);
     
@@ -309,7 +312,7 @@ void vibrationHeartbeat()
       Serial.println("--------------------------------");
       Serial.println();
     }
-    if(vibWait >= 3)
+    if(vibWait >= VIB_WAIT_COUNTER)
     {
       vibTrigger = 0;
       vibWait = 0;
