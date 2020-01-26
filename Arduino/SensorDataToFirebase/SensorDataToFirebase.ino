@@ -13,7 +13,7 @@
 #include<Wire.h>
 
 #define MOD_COUNTER 100
-#define WRIST_DEADBAND 50
+#define WRIST_MOTION__DEADBAND 50
 #define MAX_RANGE 45
 #define MIN_RANGE -45
 
@@ -224,7 +224,7 @@ int getMin()
 void updateWristMotion(int val)
 {
   int max = getMax(); int min = getMin();
-  if(abs(max - min) >= WRIST_DEADBAND && wristMotion != 10)
+  if(abs(max - min) >= WRIST_MOTION__DEADBAND && wristMotion != 10)
   {
     wristMotion++;
   }
