@@ -1,14 +1,25 @@
 
 //Example shows how to connect to Firebase RTDB and perform basic operation for set, get, push and update data to database
-
 //Required WiFiNINA Library for Arduino from https://github.com/arduino-libraries/WiFiNINA
 
+
+//Include Libraries
 #include "Firebase_Arduino_WiFiNINA.h"
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUDP.h>
 #include "time.h"
+#include <Arduino_LSM6DS3.h>
+#include<Wire.h>
 
+
+//Global Variables
+const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
+int minVal=265; int maxVal=402; 
+double x; double y; double z;
+int Counter;
+
+//Authentications
 #define FIREBASE_HOST "esp32test-acf49.firebaseio.com"
 #define FIREBASE_AUTH "uXprbUT4LSXNBSk5N5qsnnJPxYoMBtqVZfzryfhk"
 #define WIFI_SSID "SM-G955W7932"
@@ -28,11 +39,18 @@ FirebaseData firebaseData;
 
 void setup()
 {
+  //Start Gyro Transmission
+  Wire.begin(); 
+  Wire.beginTransmission(MPU_addr); 
+  Wire.write(0x6B); Wire.write(0); 
+  Wire.endTransmission(true); 
 
   Serial.begin(115200);
   delay(100);
+
   Serial.println();
 
+  //Establish Wi-Fi Connection
   Serial.print("Connecting to Wi-Fi");
   int status = WL_IDLE_STATUS;
   while (status != WL_CONNECTED)
@@ -50,9 +68,8 @@ void setup()
   timeClient.begin();
   timeClient.setTimeOffset(-18000); //May have to change offset - depends on time zone
 
-  //
 
-  //Provide the autntication data
+  //Provide the authentication data
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH, WIFI_SSID, WIFI_PASSWORD);
   Firebase.reconnectWiFi(true);
 
@@ -222,9 +239,48 @@ void setup()
 void loop()
 {
 
+//Print and Tracking Current Time 
 while (!timeClient.update()){
   timeClient.forceUpdate();
 }
   formattedDate = timeClient.getFormattedTime();
   Serial.println(formattedDate);
+
+//Gyro Sensor Readings
+Wire.beginTransmission(MPU_addr); 
+  Wire.write(0x3B); 
+  Wire.endTransmission(false); 
+  Wire.requestFrom(MPU_addr,14,true); 
+  AcX=Wire.read()<<8|Wire.read(); 
+  AcY=Wire.read()<<8|Wire.read(); 
+  AcZ=Wire.read()<<8|Wire.read();
+
+  int xAng = map(AcX,minVal,maxVal,-90,90); 
+  int yAng = map(AcY,minVal,maxVal,-90,90); 
+  int zAng = map(AcZ,minVal,maxVal,-90,90);
+
+
+  x= RAD_TO_DEG * (atan2(-yAng, -zAng)+PI); 
+  y= RAD_TO_DEG * (atan2(-xAng, -zAng)+PI); 
+  z= RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
+
+
+  Serial.print("Sensor AngleX = "); Serial.println(x);
+  Serial.print("Sensor AngleY = "); Serial.println(y);
+  Serial.print("Sensor AngleZ = "); Serial.println(z);
+
+
+  Serial.println("-----------------------------------------"); 
+
+      
+  //Arduino Gyro Readings
+  
+  float xArd, yArd, zArd, pitch;
+
+      if (IMU.accelerationAvailable()) {
+        IMU.readAcceleration(xArd,yArd,zArd);
+        pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
+        Serial.println(pitch);
+      }
+
 }
