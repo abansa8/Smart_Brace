@@ -13,6 +13,7 @@
 #include<Wire.h>
 
 #define MOD_COUNTER 100
+#define WRIST_DEADBAND 50
 
 //Global Variables
 const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
@@ -20,6 +21,9 @@ int minVal=265; int maxVal=402;
 int x; int y; int z;
 int Counter;
 int id;
+
+int currentCycle[MOD_COUNTER];
+int maxAngle; int minAngle; int wristMotion = 0;
 
 String path = "/GyroReadings";
 String jsonStr;
@@ -141,7 +145,7 @@ void loop()
 
       if (Firebase.setInt(firebaseData, path + "/" + String(id), CalcAngle))
       {
-        Serial.println("----------Set result-----------");
+        Serial.println("----------Set Angle-----------");
         Serial.println("PATH: " + firebaseData.dataPath());
         Serial.println("TYPE: " + firebaseData.dataType());
         Serial.print("VALUE: ");
@@ -158,6 +162,16 @@ void loop()
         Serial.println("--------------------------------");
         Serial.println();
       }
+
+      if(id % MOD_COUNTER == 0)
+      {
+        updateWristMotion(CalcAngle);
+      }
+      else
+      {
+        currentCycle[id % MOD_COUNTER] = CalcAngle;
+      }
+      
   }
   else
   {
@@ -165,4 +179,60 @@ void loop()
   }
 
 
+}
+
+int getMax()
+{
+  int toReturn = -10000;
+  for(int i = 0; i < MOD_COUNTER; i++)
+  {
+    if(currentCycle[i] > toReturn)
+    {
+      toReturn = currentCycle[i];
+    }
+  }
+
+  return toReturn;
+}
+
+int getMin()
+{
+  int toReturn = 10000;
+  for(int i = 0; i < MOD_COUNTER; i++)
+  {
+    if(currentCycle[i] < toReturn)
+    {
+      toReturn = currentCycle[i];
+    }
+  }
+}
+
+void updateWristMotion(int val)
+{
+  int max = getMax(); int min = getMin();
+  if(abs(max - min) >= WRIST_DEADBAND && wristMotion != 10)
+  {
+    wristMotion++;
+  }
+
+  //Update FireBase
+  if (Firebase.setInt(firebaseData, "/wrist", wristMotion))
+      {
+        Serial.println("----------Set WristMotion--------");
+        Serial.println("PATH: " + firebaseData.dataPath());
+        Serial.println("TYPE: " + firebaseData.dataType());
+        Serial.print("VALUE: ");
+        if (firebaseData.dataType() == "int")
+          Serial.println(firebaseData.intData());
+        else if (firebaseData.dataType() == "float")
+          Serial.println(firebaseData.floatData());
+        else if (firebaseData.dataType() == "boolean")
+          Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
+        else if (firebaseData.dataType() == "string")
+          Serial.println(firebaseData.stringData());
+        else if (firebaseData.dataType() == "json")
+          Serial.println(firebaseData.jsonData());
+        Serial.println("--------------------------------");
+        Serial.println();
+      }
 }
