@@ -12,7 +12,7 @@
 #include <Arduino_LSM6DS3.h>
 #include<Wire.h>
 
-#define MOD_COUNTER 100
+#define MOD_COUNTER 800
 #define MAX_RANGE 45
 #define MIN_RANGE -45
 
@@ -21,7 +21,7 @@ const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
 int minVal=265; int maxVal=402; 
 int x; int y; int z;
 int Counter;
-int id;
+int id= 46;
 float CalcAngle;
 
 //WRIST
@@ -37,7 +37,7 @@ int bodyMotion = 0;
 //VIBRATIONS
 int vibPin = 2;
 int vibTrigger = 0; int vibWait = 0;
-#define VIB_TRIGGER_COUNTER 3
+#define VIB_TRIGGER_COUNTER 10
 #define VIB_WAIT_COUNTER 3
 
 //FIREBASE
