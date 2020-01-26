@@ -208,7 +208,7 @@ void loop()
 void updateWristMotion()
 {
   Serial.println("In Wrist");
-  if(CalcAngle > WRIST_MOTION_TRIGGER || CalcAngle < -WRIST_MOTION_TRIGGER)
+  if((CalcAngle > WRIST_MOTION_TRIGGER || CalcAngle < -WRIST_MOTION_TRIGGER) && wristMotion <= 10)
   {
     streachCounter++;
   }
