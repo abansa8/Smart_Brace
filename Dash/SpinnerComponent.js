@@ -24,7 +24,7 @@ import {
 class SpinnerComponent extends Component {
     render() {
         return (
-            <View style={{flexDirection: 'row', width: '80%'}}>
+            <View style={{width: '100%', position: 'absolute', zIndex: 88, bottom: -80, right: -160,  alignSelf: 'center'}}>
                 <Image source={require('./assets/Spinner.png')}></Image>
             </View>
         )
@@ -32,13 +32,6 @@ class SpinnerComponent extends Component {
 }
 
 const styles = StyleSheet.create({
-    semiCircle: {
-        height: 150,
-        width: 300,
-        borderTopLeftRadius: 200,
-        borderTopRightRadius: 200,
-        backgroundColor: '#002071',
-    },
     image1:{
         alignSelf: 'center',
         paddingRight: 24

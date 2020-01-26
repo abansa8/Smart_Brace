@@ -6,15 +6,19 @@
  * @flow
  */
 
-import React from 'react';
+import React, { Component, useState, useEffect } from 'react';
+
 import {
   SafeAreaView,
   StyleSheet,
   ScrollView,
   View,
   Text,
+  Image,
   StatusBar,
-  Dimensions
+  Dimensions,
+  Animated,
+  Easing
 } from 'react-native';
 
 import {
@@ -51,9 +55,23 @@ import Spinner from './SpinnerComponent';
 
 import Firebase from 'firebase';
 
+var PushNotification = require("react-native-push-notification");
+
+
+import styled from 'styled-components'
+import { smart } from '@babel/template';
+const keyframes = require('styled-components').keyframes
+
+
 var firebaseConfig = {
-  databaseURL: "<database-url>",
-  projectId: "<project-id>",
+  apiKey: "AIzaSyAzWMeNwyE8OH4L7BLOS6e2DqkraRZMnlo",
+  authDomain: "esp32test-acf49.firebaseapp.com",
+  databaseURL: "https://esp32test-acf49.firebaseio.com",
+  projectId: "esp32test-acf49",
+  storageBucket: "esp32test-acf49.appspot.com",
+  messagingSenderId: "870795617355",
+  appId: "1:870795617355:web:5aa3c606c47f56724799ce",
+  measurementId: "G-CZJG22MZQ8"
 };
 // you can set your style right here, it'll be propagated to application
 const uiTheme = {
@@ -82,108 +100,305 @@ const chartConfig = {
   barPercentage: 0.5
 };
 
-const dataPro = {
-  data: [0.4]
-}
-const dataPro2 = {
-  data: [0.8]
-}
+const FadeInView = (props) => {
+  const [fadeAnim] = useState(new Animated.Value(0))  // Initial value for opacity: 0
 
-
-const App: () => React$Node = () => {
-
-  Firebase.initializeApp(firebaseConfig);
+  React.useEffect(() => {
+    Animated.timing(
+      fadeAnim,
+      {
+        toValue: 1,
+        duration: 1000,
+      },
+    ).start();
+  }, [])
 
   return (
-    <>
-      {
-        <ThemeContext.Provider value={getTheme(uiTheme)}>
-          <View>
-            <Toolbar
-              key="toolbar"
-              centerElement="SMART DASH"
-            />
-            <LinearGradient
-              colors={['#0d47a1', '#0d47a1']}
-              style={{ padding: 15, alignItems: 'center', height: '100%' }}>
-              <View>
-                <Text style={styles.subTitles}>Daily Trend</Text>
-                <LineChart
-                  data={{
-                    labels: ["January", "February", "March", "April", "May", "June"],
-                    datasets: [
-                      {
-                        data: [
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100
-                        ]
-                      }
-                    ]
-                  }}
-                  width={(Dimensions.get("window").width) * 0.95} // from react-native
-                  height={220}
-                  yAxisLabel="$"
-                  yAxisSuffix="k"
-                  chartConfig={{
-                    decimalPlaces: 2, // optional, defaults to 2dp
-                    backgroundGradientFrom: "#ffffff",
-                    backgroundGradientFromOpacity: 1,
-                    backgroundGradientTo: "#ffffff",
-                    backgroundGradientToOpacity: 1,
-                    fillShadowGradient: '#5471d2',
-                    fillShadowGradientOpacity: 0.2,
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16
-                    },
-                    propsForDots: {
-                      r: "6",
-                      strokeWidth: "2",
-                      stroke: "#0d47a1"
-                    }
-                  }}
-                  bezier
-                  style={styles.floatView}
-                />
-              </View>
-              <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between', paddingTop: 24 }}>
-                <View style={{ textAlign: 'center' }}>
-                  <Text style={styles.subTitles2}>Wrist</Text>
-                  <ProgressChart
-                    data={dataPro}
-                    width={(Dimensions.get("window").width) * 0.33} // from react-native
-                    height={100}
-                    chartConfig={chartConfig}
-                    hideLegend={true}
-                    style={{ paddingLeft: 12 }}
-                  />
-                </View>
-                <View style={{ textAlign: 'center' }}>
-                  <Text style={styles.subTitles2}>Body</Text>
-                  <ProgressChart
-                    data={dataPro2}
-                    width={(Dimensions.get("window").width) * 0.33} // from react-native
-                    height={100}
-                    chartConfig={chartConfig}
-                    hideLegend={true}
-                    style={{ paddingLeft: 12 }}
-                  />
-                </View>
-              </View>
-              <View style={{paddingTop: 30}}>
-                <Spinner></Spinner>
-              </View>
-            </LinearGradient>
-          </View>
-        </ThemeContext.Provider>
-      }
-    </>
+    <Animated.Image                 // Special animatable View
+      style={{
+        ...props.style,
+        opacity: fadeAnim,
+        width: 100      // Bind opacity to animated value
+      }}
+      source={require('./assets/hand.png')}
+    >
+      {props.children}
+    </Animated.Image>
   );
+}
+
+export default class HelloWorldApp extends Component {
+
+  state = {
+    wristData: { data: [0] },
+    bodyData: { data: [0] },
+    angleData: { data: [0] },
+    labelData: ["1 min"],
+    spinAngle: 0,
+    imageArrIndex: 0
+  }
+
+  readBodyData() {
+    Firebase.database().ref('/').on('value', (snapshot) => {
+      this.setState({
+        bodyData: { data: [(snapshot.val().body / 10)] }
+      })
+      console.log(this.state['bodyData']);
+    }, function (error) {
+      console.log(error);
+    });
+  }
+  readWristData() {
+    Firebase.database().ref('/').on('value', (snapshot) => {
+      this.setState({
+        wristData: { data: [(snapshot.val().wrist / 10)] }
+      })
+      console.log(this.state['wristData']);
+    }, function (error) {
+      console.log(error);
+    });
+  }
+
+  readAngleData() {
+    Firebase.database().ref('GyroReadings/').on('value', (snapshot) => {
+      console.log(snapshot.val());
+      var lengthArr = snapshot.val().length;
+      var numEntries = Math.ceil(lengthArr / 60);
+      if (numEntries == 1) {
+        this.setState({
+          labelData: ["0 min", "1 min"]
+        })
+      }
+      else if (numEntries == 2) {
+        this.setState({
+          labelData: ["0 min", "1 min", "2 min"]
+        })
+      }
+      else if (numEntries == 3) {
+        this.setState({
+          labelData: ["0 min", "1 min", "2 min", "3 min"]
+        })
+      }
+      else if (numEntries == 4) {
+        this.setState({
+          labelData: ["0 min", "1 min", "2 min", "3 min", "4 min"]
+        })
+      }
+      else if (numEntries == 5) {
+        this.setState({
+          labelData: ["0 min", "1 min", "2 min", "3 min", "4 min", "5 min"]
+        })
+      }
+      this.setState({
+        angleData: { data: (snapshot.val()) }
+      })
+      console.log(snapshot.val()[snapshot.val().length - 1])
+      if(snapshot.val()[snapshot.val().length - 1] >= -5 && snapshot.val()[snapshot.val().length - 1] < 5){
+        this.setState({
+          imageArrIndex: 0
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 5 && snapshot.val()[snapshot.val().length - 1] < 20){
+        this.setState({
+          imageArrIndex: 1
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 20 && snapshot.val()[snapshot.val().length - 1] < 35){
+        this.setState({
+          imageArrIndex: 3
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >=35 && snapshot.val()[snapshot.val().length - 1] < 50){
+        this.setState({
+          imageArrIndex: 5
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 50 && snapshot.val()[snapshot.val().length - 1] < 65){
+        this.setState({
+          imageArrIndex: 7
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 65 && snapshot.val()[snapshot.val().length - 1] < 80){
+        this.setState({
+          imageArrIndex: 9
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 80){
+        this.setState({
+          imageArrIndex: 11
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -20 && snapshot.val()[snapshot.val().length - 1] <= -5){
+        this.setState({
+          imageArrIndex: 2
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -35 && snapshot.val()[snapshot.val().length - 1] <= -20){
+        this.setState({
+          imageArrIndex: 4
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -50 && snapshot.val()[snapshot.val().length - 1] <= -35){
+        this.setState({
+          imageArrIndex: 6
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -65 && snapshot.val()[snapshot.val().length - 1] <= -50){
+        this.setState({
+          imageArrIndex: 8
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -80 && snapshot.val()[snapshot.val().length - 1] <= -65){
+        this.setState({
+          imageArrIndex: 10
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] <= -80){
+        this.setState({
+          imageArrIndex: 12
+        })
+      }
+
+    }, function (error) {
+      console.log(error);
+    });
+  }
+
+  readVibration() {
+    Firebase.database().ref('/').on('value', (snapshot) => {
+      if (snapshot.val().vibration == 1) {
+        PushNotification.localNotification({
+          vibrate: true, // (optional) default: true
+          vibration: 300, // vibration length in milliseconds, ignored if vibrate=false, default: 1000
+
+
+          /* iOS and Android properties */
+          title: "Smart Brace: Alert", // (optional)
+          message: "Poor wrist angles detected. Please correct your posture", // (required)
+          playSound: false, // (optional) default: true
+          soundName: 'default', // (optional) Sound to play when the notification is shown. Value of 'default' plays the default sound. It can be set to a custom sound such as 'android.resource://com.xyz/raw/my_sound'. It will look for the 'my_sound' audio file in 'res/raw' directory and play it. default: 'default' (default sound is played)
+          actions: '["Yes", "No"]',  // (Android only) See the doc for notification actions to know more
+        });
+      }
+    }, function (error) {
+      console.log(error);
+    });
+  }
+
+  constructor(props) {
+    super(props);
+    console.log(this.props);
+    if (!Firebase.apps.length) {
+      Firebase.initializeApp(firebaseConfig);
+    }
+    this.readBodyData();
+    this.readWristData();
+    this.readAngleData();
+    this.readVibration();
+  }
+
+  render() {
+    imageArr = [
+      require('./assets/arm.png'),
+      require('./assets/arm15.png'),
+      require('./assets/arm-15.png'),
+      require('./assets/arm30.png'),
+      require('./assets/arm-30.png'),
+      require('./assets/arm45.png'),
+      require('./assets/arm-45.png'),
+      require('./assets/arm60.png'),
+      require('./assets/arm-60.png'),
+      require('./assets/arm75.png'),
+      require('./assets/arm-75.png'),
+      require('./assets/arm90.png'),
+      require('./assets/arm-90.png'),
+    ];
+
+    return (
+      <>
+        {
+          <ThemeContext.Provider value={getTheme(uiTheme)}>
+            <View>
+              <Toolbar
+                key="toolbar"
+                centerElement="SMART DASH"
+              />
+              <LinearGradient
+                colors={['#0d47a1', '#0d47a1']}
+                style={{ padding: 15, alignItems: 'center', height: '100%' }}>
+                <View>
+                  <Text style={styles.subTitles}>Daily Trend</Text>
+                  <LineChart
+                    data={{
+                      labels: this.state['labelData'],
+                      datasets: [
+                        this.state['angleData']
+                      ]
+                    }}
+                    width={(Dimensions.get("window").width) * 0.95} // from react-native
+                    height={200}
+                    chartConfig={{
+                      decimalPlaces: 0, // optional, defaults to 2dp
+                      backgroundGradientFrom: "#ffffff",
+                      backgroundGradientFromOpacity: 1,
+                      backgroundGradientTo: "#ffffff",
+                      backgroundGradientToOpacity: 1,
+                      fillShadowGradient: '#5471d2',
+                      fillShadowGradientOpacity: 0.2,
+                      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                      labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                      style: {
+                        borderRadius: 16
+                      },
+                      propsForDots: {
+                        r: "3",
+                        strokeWidth: "1",
+                        stroke: "#0d47a1"
+                      }
+                    }}
+                    bezier
+                    style={styles.floatView}
+                  />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'column', width: '100%', justifyContent: 'space-between', paddingTop: 24 }}>
+                    <View style={{ textAlign: 'left' }}>
+                      <Text style={styles.subTitles2}>Wrist</Text>
+                      <ProgressChart
+                        data={this.state['wristData']}
+                        width={(Dimensions.get("window").width) * 0.33} // from react-native
+                        height={100}
+                        chartConfig={chartConfig}
+                        hideLegend={true}
+                        style={{ paddingLeft: 12 }}
+                      />
+                    </View>
+                    <View style={{ textAlign: 'left' }}>
+                      <Text style={styles.subTitles2}>Body</Text>
+                      <ProgressChart
+                        data={this.state['bodyData']}
+                        width={(Dimensions.get("window").width) * 0.33} // from react-native
+                        height={100}
+                        chartConfig={chartConfig}
+                        hideLegend={true}
+                        style={{ paddingLeft: 12 }}
+                      />
+                    </View>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', zIndex: 99, position: 'absolute', top: '35%', left: '40%' }}>
+                  <Image style={{ width: 270, height: 300}} source={imageArr[this.state['imageArrIndex']]} />
+                </View>
+                <View style={{ paddingTop: 25}}>
+                  <Spinner></Spinner>
+                </View>
+              </LinearGradient>
+            </View>
+          </ThemeContext.Provider>
+        }
+      </>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -232,18 +447,16 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginRight: 5,
     marginTop: 10,
-    borderRadius: 20
+    borderRadius: 20,
   },
   subTitles: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 25,
     paddingLeft: 8,
   },
   subTitles2: {
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
     color: 'white',
     fontSize: 20,
   }
 });
-
-export default App;
