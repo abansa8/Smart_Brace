@@ -48,6 +48,13 @@ import {
 
 import LinearGradient from 'react-native-linear-gradient';
 import Spinner from './SpinnerComponent';
+
+import Firebase from 'firebase';
+
+var firebaseConfig = {
+  databaseURL: "<database-url>",
+  projectId: "<project-id>",
+};
 // you can set your style right here, it'll be propagated to application
 const uiTheme = {
   palette: {
@@ -82,7 +89,11 @@ const dataPro2 = {
   data: [0.8]
 }
 
+
 const App: () => React$Node = () => {
+
+  Firebase.initializeApp(firebaseConfig);
+
   return (
     <>
       {

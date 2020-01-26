@@ -15,6 +15,7 @@ import {
     StyleSheet,
     ScrollView,
     View,
+    Image,
     Text,
     StatusBar,
     Dimensions
@@ -23,7 +24,8 @@ import {
 class SpinnerComponent extends Component {
     render() {
         return (
-            <View style={styles.semiCircle}>
+            <View style={{flexDirection: 'row', width: '80%'}}>
+                <Image source={require('./assets/Spinner.png')}></Image>
             </View>
         )
     }
@@ -36,6 +38,14 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 200,
         borderTopRightRadius: 200,
         backgroundColor: '#002071',
+    },
+    image1:{
+        alignSelf: 'center',
+        paddingRight: 24
+    },
+    image:{
+        alignSelf: 'center',
+        paddingLeft: 24
     }
 })
 export default SpinnerComponent;
