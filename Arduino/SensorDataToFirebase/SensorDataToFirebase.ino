@@ -256,6 +256,27 @@ void vibrationHeartbeat()
   if(vibtrigger < 3)
   {
     digitalWrite(vibPin, LOW);
+    
+    if (Firebase.setInt(firebaseData, "/vibration", 0))
+    {
+      Serial.println("----------Set Vibration--------");
+      Serial.println("PATH: " + firebaseData.dataPath());
+      Serial.println("TYPE: " + firebaseData.dataType());
+      Serial.print("VALUE: ");
+      if (firebaseData.dataType() == "int")
+        Serial.println(firebaseData.intData());
+      else if (firebaseData.dataType() == "float")
+        Serial.println(firebaseData.floatData());
+      else if (firebaseData.dataType() == "boolean")
+        Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
+      else if (firebaseData.dataType() == "string")
+        Serial.println(firebaseData.stringData());
+      else if (firebaseData.dataType() == "json")
+        Serial.println(firebaseData.jsonData());
+      Serial.println("--------------------------------");
+      Serial.println();
+    }
+    
     if(CalcAngle < MIN_RANGE || CalcAngle > MAX_RANGE)
     {
       vibTrigger++;
@@ -269,9 +290,29 @@ void vibrationHeartbeat()
   else
   {
     digitalWrite(vibPin, HIGH);
-    if(vibWait == 3)
+    if (Firebase.setInt(firebaseData, "/vibration", 1))
+    {
+      Serial.println("----------Set Vibration--------");
+      Serial.println("PATH: " + firebaseData.dataPath());
+      Serial.println("TYPE: " + firebaseData.dataType());
+      Serial.print("VALUE: ");
+      if (firebaseData.dataType() == "int")
+        Serial.println(firebaseData.intData());
+      else if (firebaseData.dataType() == "float")
+        Serial.println(firebaseData.floatData());
+      else if (firebaseData.dataType() == "boolean")
+        Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
+      else if (firebaseData.dataType() == "string")
+        Serial.println(firebaseData.stringData());
+      else if (firebaseData.dataType() == "json")
+        Serial.println(firebaseData.jsonData());
+      Serial.println("--------------------------------");
+      Serial.println();
+    }
+    if(vibWait >= 3)
     {
       vibTrigger = 0;
+      vibWait = 0;
     }
     else
     {
