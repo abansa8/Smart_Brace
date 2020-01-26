@@ -219,7 +219,8 @@ Wire.beginTransmission(MPU_addr);
         //Serial.println(pitch);
 
         //Calculated Angle Difference
-      float CalcAngle = y - pitch;
+      int CalcAngle = y - pitch;
+      //Serial.println(CalcAngle);
 
 //Set Data
 
@@ -228,7 +229,7 @@ Wire.beginTransmission(MPU_addr);
   Serial.println("-----------------------------------");
   Serial.println();
 
-    if (Firebase.setInt(firebaseData, path + "/Int/Time: " + formattedDate, y))
+    if (Firebase.setInt(firebaseData, path + "/Int/Time: " + formattedDate, CalcAngle))
     {
       Serial.println("----------Set result-----------");
       Serial.println("PATH: " + firebaseData.dataPath());
