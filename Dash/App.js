@@ -59,6 +59,7 @@ var PushNotification = require("react-native-push-notification");
 
 
 import styled from 'styled-components'
+import { smart } from '@babel/template';
 const keyframes = require('styled-components').keyframes
 
 
@@ -134,7 +135,7 @@ export default class HelloWorldApp extends Component {
     angleData: { data: [0] },
     labelData: ["1 min"],
     spinAngle: 0,
-    lastSpinAngle: 0
+    imageArrIndex: 0
   }
 
   readBodyData() {
@@ -191,9 +192,73 @@ export default class HelloWorldApp extends Component {
       this.setState({
         angleData: { data: (snapshot.val()) }
       })
-      this.setState({
-        spinAngle: snapshot.val()[snapshot.val().length - 1]
-      })
+      console.log(snapshot.val()[snapshot.val().length - 1])
+      if(snapshot.val()[snapshot.val().length - 1] >= -5 && snapshot.val()[snapshot.val().length - 1] < 5){
+        this.setState({
+          imageArrIndex: 0
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 5 && snapshot.val()[snapshot.val().length - 1] < 20){
+        this.setState({
+          imageArrIndex: 1
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 20 && snapshot.val()[snapshot.val().length - 1] < 35){
+        this.setState({
+          imageArrIndex: 3
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >=35 && snapshot.val()[snapshot.val().length - 1] < 50){
+        this.setState({
+          imageArrIndex: 5
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 50 && snapshot.val()[snapshot.val().length - 1] < 65){
+        this.setState({
+          imageArrIndex: 7
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 65 && snapshot.val()[snapshot.val().length - 1] < 80){
+        this.setState({
+          imageArrIndex: 9
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] >= 80){
+        this.setState({
+          imageArrIndex: 11
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -20 && snapshot.val()[snapshot.val().length - 1] <= -5){
+        this.setState({
+          imageArrIndex: 2
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -35 && snapshot.val()[snapshot.val().length - 1] <= -20){
+        this.setState({
+          imageArrIndex: 4
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -50 && snapshot.val()[snapshot.val().length - 1] <= -35){
+        this.setState({
+          imageArrIndex: 6
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -65 && snapshot.val()[snapshot.val().length - 1] <= -50){
+        this.setState({
+          imageArrIndex: 8
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] > -80 && snapshot.val()[snapshot.val().length - 1] <= -65){
+        this.setState({
+          imageArrIndex: 10
+        })
+      }
+      if(snapshot.val()[snapshot.val().length - 1] <= -80){
+        this.setState({
+          imageArrIndex: 12
+        })
+      }
+
     }, function (error) {
       console.log(error);
     });
@@ -207,7 +272,7 @@ export default class HelloWorldApp extends Component {
           vibration: 300, // vibration length in milliseconds, ignored if vibrate=false, default: 1000
 
 
-            /* iOS and Android properties */
+          /* iOS and Android properties */
           title: "Smart Brace: Alert", // (optional)
           message: "Poor wrist angles detected. Please correct your posture", // (required)
           playSound: false, // (optional) default: true
@@ -233,6 +298,22 @@ export default class HelloWorldApp extends Component {
   }
 
   render() {
+    imageArr = [
+      require('./assets/arm.png'),
+      require('./assets/arm15.png'),
+      require('./assets/arm-15.png'),
+      require('./assets/arm30.png'),
+      require('./assets/arm-30.png'),
+      require('./assets/arm45.png'),
+      require('./assets/arm-45.png'),
+      require('./assets/arm60.png'),
+      require('./assets/arm-60.png'),
+      require('./assets/arm75.png'),
+      require('./assets/arm-75.png'),
+      require('./assets/arm90.png'),
+      require('./assets/arm-90.png'),
+    ];
+
     return (
       <>
         {
@@ -255,7 +336,7 @@ export default class HelloWorldApp extends Component {
                       ]
                     }}
                     width={(Dimensions.get("window").width) * 0.95} // from react-native
-                    height={300}
+                    height={200}
                     chartConfig={{
                       decimalPlaces: 0, // optional, defaults to 2dp
                       backgroundGradientFrom: "#ffffff",
@@ -305,14 +386,10 @@ export default class HelloWorldApp extends Component {
                     </View>
                   </View>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', zIndex: 5, position: 'absolute', top: '50%', left: '40%' }}>
-                  <Image style={{ width: 300 }} source={require('./assets/arm.png')} />
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', zIndex: 99, position: 'absolute', top: '35%', left: '40%' }}>
+                  <Image style={{ width: 270, height: 300}} source={imageArr[this.state['imageArrIndex']]} />
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', zIndex: 10, position: 'absolute', top: '60.5%', left: '56.5%' }}>
-                  <FadeInView></FadeInView>
-                  {/* <Animated.Image style={{ width: 100}} source={require('./assets/hand.png')} /> */}
-                </View>
-                <View style={{ paddingTop: 35 }}>
+                <View style={{ paddingTop: 25}}>
                   <Spinner></Spinner>
                 </View>
               </LinearGradient>
@@ -374,12 +451,12 @@ const styles = StyleSheet.create({
   },
   subTitles: {
     color: 'white',
-    fontSize: 30,
+    fontSize: 25,
     paddingLeft: 8,
   },
   subTitles2: {
     alignSelf: 'flex-start',
     color: 'white',
-    fontSize: 30,
+    fontSize: 20,
   }
 });
