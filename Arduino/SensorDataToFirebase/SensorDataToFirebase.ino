@@ -12,6 +12,7 @@
 #include <Arduino_LSM6DS3.h>
 #include<Wire.h>
 
+#define MOD_COUNTER 10
 
 //Global Variables
 const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
@@ -75,116 +76,23 @@ void setup()
   //Fill the authentication data
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH, WIFI_SSID, WIFI_PASSWORD);
   Firebase.reconnectWiFi(true);
-
-
- 
-//      //Pushing Data
-//  Serial.println("-----------------------------------");
-//  Serial.println("----------Begin Push Test----------");
-//  Serial.println("-----------------------------------");
-//  Serial.println();
-//
-//  for (uint8_t i = 0; i < 5; i++)
-//  {
-//
-//    if (Firebase.pushInt(firebaseData, path + "/Push/Int", (i + 1)))
-//    {
-//      Serial.println("----------Push result-----------");
-//      Serial.println("PATH: " + firebaseData.dataPath());
-//      Serial.print("PUSH NAME: ");
-//      Serial.println(firebaseData.pushName());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//    else
-//    {
-//      Serial.println("----------Can't push data--------");
-//      Serial.println("REASON: " + firebaseData.errorReason());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//  }
-
-//
-//
-//  for (uint8_t i = 5; i < 10; i++)
-//  {
-//
-//    jsonStr = "{\"Data" + String(i + 1) + "\":" + String(i + 1) + "}";
-//
-//    if (Firebase.pushJSON(firebaseData, path + "/Push/Int", jsonStr))
-//    {
-//      Serial.println("----------Push result-----------");
-//      Serial.println("PATH: " + firebaseData.dataPath());
-//      Serial.print("PUSH NAME: ");
-//      Serial.println(firebaseData.pushName());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//    else
-//    {
-//      Serial.println("----------Can't push data--------");
-//      Serial.println("REASON: " + firebaseData.errorReason());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//  }
-
-
-////Update Data
-//  Serial.println("-----------------------------------");
-//  Serial.println("---------Begin Update Test----------");
-//  Serial.println("-----------------------------------");
-//  Serial.println();
-//
-//  for (uint8_t i = 0; i < 5; i++)
-//  {
-//
-//    jsonStr = "{\"Data" + String(i + 1) + "\":" + String(i + 5.5) + "}";
-//
-//    if (Firebase.updateNode(firebaseData, path + "/Int", jsonStr))
-//    {
-//      Serial.println("----------Update result-----------");
-//      Serial.println("PATH: " + firebaseData.dataPath());
-//      Serial.println("TYPE: " + firebaseData.dataType());
-//      Serial.print("VALUE: ");
-//      if (firebaseData.dataType() == "int")
-//        Serial.println(firebaseData.intData());
-//      else if (firebaseData.dataType() == "float")
-//        Serial.println(firebaseData.floatData());
-//      else if (firebaseData.dataType() == "boolean")
-//        Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
-//      else if (firebaseData.dataType() == "string")
-//        Serial.println(firebaseData.stringData());
-//      else if (firebaseData.dataType() == "json")
-//        Serial.println(firebaseData.jsonData());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//    else
-//    {
-//      Serial.println("----------Can't Update data--------");
-//      Serial.println("REASON: " + firebaseData.errorReason());
-//      Serial.println("--------------------------------");
-//      Serial.println();
-//    }
-//  }
 }
 
 void loop()
 {
 
-//Print and Tracking Current Time 
-while (!timeClient.update()){
-  timeClient.forceUpdate();
-}
+  //Print and Tracking Current Time 
+  while (!timeClient.update())
+  {
+    timeClient.forceUpdate();
+  }
   formattedDate = timeClient.getFormattedTime();
   
   //Serial.println(formattedDate);
 
 
-//Gyro Sensor Readings
-Wire.beginTransmission(MPU_addr); 
+  //Gyro Sensor Readings
+  Wire.beginTransmission(MPU_addr); 
   Wire.write(0x3B); 
   Wire.endTransmission(false); 
   Wire.requestFrom(MPU_addr,14,true); 
@@ -212,42 +120,48 @@ Wire.beginTransmission(MPU_addr);
   
   float xArd, yArd, zArd, pitch;
 
-      //if (IMU.accelerationAvailable()) {
-        IMU.readAcceleration(xArd,yArd,zArd);
-        pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
-        
-        //Serial.println(pitch);
+  //if (IMU.accelerationAvailable()) {
+  IMU.readAcceleration(xArd,yArd,zArd);
+  pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
 
-        //Calculated Angle Difference
-      int CalcAngle = y - pitch;
-      //Serial.println(CalcAngle);
+  //Calculated Angle Difference
+  float CalcAngle = y - pitch;
 
-//Set Data
-
-  Serial.println("-----------------------------------");
-  Serial.println("----------Begin Set Test-----------");
-  Serial.println("-----------------------------------");
-  Serial.println();
-
-    if (Firebase.setInt(firebaseData, path + "/Int/Time: " + formattedDate, CalcAngle))
-    {
-      Serial.println("----------Set result-----------");
-      Serial.println("PATH: " + firebaseData.dataPath());
-      Serial.println("TYPE: " + firebaseData.dataType());
-      Serial.print("VALUE: ");
-      if (firebaseData.dataType() == "int")
-        Serial.println(firebaseData.intData());
-      else if (firebaseData.dataType() == "float")
-        Serial.println(firebaseData.floatData());
-      else if (firebaseData.dataType() == "boolean")
-        Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
-      else if (firebaseData.dataType() == "string")
-        Serial.println(firebaseData.stringData());
-      else if (firebaseData.dataType() == "json")
-        Serial.println(firebaseData.jsonData());
-      Serial.println("--------------------------------");
-      Serial.println();
-    }
+  if(Counter > MOD_COUNTER)
+  {
+    //Reset Counter
+    Counter = 0;
+    
+    //Set Data
+    Serial.println("-----------------------------------");
+    Serial.println("------------Begin Send-------------");
+    Serial.println("-----------------------------------");
+    Serial.println();
+  
+      if (Firebase.setInt(firebaseData, path + "/Int/Time: " + formattedDate, CalcAngle))
+      {
+        Serial.println("----------Set result-----------");
+        Serial.println("PATH: " + firebaseData.dataPath());
+        Serial.println("TYPE: " + firebaseData.dataType());
+        Serial.print("VALUE: ");
+        if (firebaseData.dataType() == "int")
+          Serial.println(firebaseData.intData());
+        else if (firebaseData.dataType() == "float")
+          Serial.println(firebaseData.floatData());
+        else if (firebaseData.dataType() == "boolean")
+          Serial.println(firebaseData.boolData() == 1 ? "true" : "false");
+        else if (firebaseData.dataType() == "string")
+          Serial.println(firebaseData.stringData());
+        else if (firebaseData.dataType() == "json")
+          Serial.println(firebaseData.jsonData());
+        Serial.println("--------------------------------");
+        Serial.println();
+      }
+  }
+  else
+  {
+    Counter++;
+  }
 
 
 }
