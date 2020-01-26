@@ -26,7 +26,7 @@ float CalcAngle;
 
 //WRIST
 #define WRIST_MOTION__DEADBAND 70
-#define WRIST_MOTION_TRIGGER 100
+#define WRIST_MOTION_TRIGGER 3
 bool streaching = false; int stageOneComplete = 0; int wristMotion = 0;
 int streachCounter = 0;
 
@@ -37,7 +37,7 @@ int bodyMotion = 0;
 //VIBRATIONS
 int vibPin = 2;
 int vibTrigger = 0; int vibWait = 0;
-#define VIB_TRIGGER_COUNTER 10
+#define VIB_TRIGGER_COUNTER 5
 #define VIB_WAIT_COUNTER 3
 
 //FIREBASE
@@ -64,6 +64,7 @@ FirebaseData firebaseData;
 
 void setup()
 {
+  
   //Start Gyro Transmission
   Wire.begin(); 
   Wire.beginTransmission(MPU_addr); 
@@ -71,6 +72,14 @@ void setup()
   Wire.endTransmission(true); 
 
   Serial.begin(115200);
+
+
+   if (!IMU.begin()) {
+    Serial.println("IMU Uninitialized!");
+
+    while (1);
+  }
+  
   delay(100);
 
   //Vibration motor OUTPUT
@@ -132,30 +141,30 @@ void loop()
   y= RAD_TO_DEG * (atan2(-xAng, -zAng)+PI); 
   z= RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
 
-
-  //Serial.print("Sensor AngleX = "); Serial.println(x);
-  //Serial.print("Sensor AngleY = "); Serial.println(y);
-  //Serial.print("Sensor AngleZ = "); Serial.println(z);
-
-
       
   //Arduino Gyro Readings
   
   float xArd, yArd, zArd, pitch;
 
-  //if (IMU.accelerationAvailable()) {
+ if (IMU.accelerationAvailable()) {
   IMU.readAcceleration(xArd,yArd,zArd);
-  pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
 
+  pitch = 180 * atan2(xArd, sqrt(yArd*yArd + zArd*zArd))/PI;
+ }
   //Calculated Angle Difference
-  CalcAngle = y - pitch;
+  CalcAngle = y - pitch - 10;
 
   if(Counter > MOD_COUNTER)
   {
     //Reset Counter
     id++;
     Counter = 0;
-    
+
+  if(CalcAngle > 180)
+  {
+    CalcAngle = CalcAngle - 360;
+  }
+       
     //Set Data
     Serial.println("-----------------------------------");
     Serial.println("------------Begin Send-------------");
@@ -181,12 +190,12 @@ void loop()
         Serial.println("--------------------------------");
         Serial.println();
       }
-
-      //Updating WristMotion
-      updateWristMotion();
   
       //Updating vibration motor settings
       vibrationHeartbeat();
+
+      //Updating WristMotion
+      updateWristMotion();
   }
   else
   {
@@ -198,6 +207,7 @@ void loop()
 
 void updateWristMotion()
 {
+  Serial.println("In Wrist");
   if(CalcAngle > WRIST_MOTION_TRIGGER || CalcAngle < -WRIST_MOTION_TRIGGER)
   {
     streachCounter++;
