@@ -12,13 +12,14 @@
 #include <Arduino_LSM6DS3.h>
 #include<Wire.h>
 
-#define MOD_COUNTER 10
+#define MOD_COUNTER 100
 
 //Global Variables
 const int MPU_addr=0x68; int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
 int minVal=265; int maxVal=402; 
 int x; int y; int z;
 int Counter;
+int id;
 
 String path = "/GyroReadings";
 String jsonStr;
@@ -80,7 +81,6 @@ void setup()
 
 void loop()
 {
-
   //Print and Tracking Current Time 
   while (!timeClient.update())
   {
@@ -130,6 +130,7 @@ void loop()
   if(Counter > MOD_COUNTER)
   {
     //Reset Counter
+    id++;
     Counter = 0;
     
     //Set Data
@@ -137,8 +138,8 @@ void loop()
     Serial.println("------------Begin Send-------------");
     Serial.println("-----------------------------------");
     Serial.println();
-  
-      if (Firebase.setInt(firebaseData, path + "/Int/Time: " + formattedDate, CalcAngle))
+
+      if (Firebase.setInt(firebaseData, path + "/" + String(id), CalcAngle))
       {
         Serial.println("----------Set result-----------");
         Serial.println("PATH: " + firebaseData.dataPath());
