@@ -1,4 +1,4 @@
-
+ 
 //Example shows how to connect to Firebase RTDB and perform basic operation for set, get, push and update data to database
 //Required WiFiNINA Library for Arduino from https://github.com/arduino-libraries/WiFiNINA
 
